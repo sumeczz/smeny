@@ -37,7 +37,7 @@ export default function CurrentDateTime() {
 
   return (
     <div className="flex items-center">
-      <Clock className="h-4 w-4 mr-1.5 text-primary" />
+      <Clock className="h-4 w-4 mr-2 text-primary" />
       <div className="flex items-center">
         <span className="text-lg font-semibold mr-2">{currentTime}</span>
         <div className="flex flex-col">

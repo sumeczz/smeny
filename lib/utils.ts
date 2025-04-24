@@ -15,6 +15,13 @@ export function formatDate(dateString: string): string {
   }).format(date)
 }
 
+export function formatDateRange(startDate: Date, endDate: Date): string {
+  const options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit" }
+  const start = new Intl.DateTimeFormat("cs-CZ", options).format(startDate)
+  const end = new Intl.DateTimeFormat("cs-CZ", options).format(endDate)
+  return `${start} - ${end}`
+}
+
 export function formatTime(timeString: string): string {
   return timeString
 }
@@ -35,8 +42,8 @@ export function calculateHours(startTime: string, endTime: string): number {
     hours += 24
   }
 
-  // Round to whole numbers
-  return Math.round(hours + minutes / 60)
+  // Return with one decimal place precision
+  return Math.round((hours + minutes / 60) * 10) / 10
 }
 
 export function generateId(): string {
@@ -80,6 +87,39 @@ export function getLastPaymentDate(shifts: Shift[], paymentDay: PaymentDay): Dat
   return lastPaymentDate
 }
 
+// Upravte funkci getStartOfWeek, aby brala v úvahu uživatelské nastavení prvního dne týdne
+export function getStartOfWeek(date: Date, weekStartDay = 1): Date {
+  const result = new Date(date)
+  const day = result.getDay()
+  // Výpočet rozdílu dnů s ohledem na uživatelské nastavení prvního dne týdne
+  const diff = result.getDate() - ((7 + day - weekStartDay) % 7)
+  result.setDate(diff)
+  result.setHours(0, 0, 0, 0)
+  return result
+}
+
+export function getEndOfWeek(date: Date): Date {
+  const result = new Date(date)
+  const day = result.getDay()
+  const diff = result.getDate() + (day === 0 ? 0 : 7 - day) // adjust when day is Sunday
+  result.setDate(diff)
+  result.setHours(23, 59, 59, 999)
+  return result
+}
+
+// Upravte funkci isNewWeek, aby brala v úvahu uživatelské nastavení prvního dne týdne
+export function isNewWeek(currentDate: string, previousDate: string | null, weekStartDay = 1): boolean {
+  if (!previousDate) return false
+
+  const current = new Date(currentDate)
+  const previous = new Date(previousDate)
+
+  const currentWeekStart = getStartOfWeek(current, weekStartDay)
+  const previousWeekStart = getStartOfWeek(previous, weekStartDay)
+
+  return currentWeekStart.getTime() !== previousWeekStart.getTime()
+}
+
 export function filterShiftsByPeriod(shifts: Shift[], period: Period, paymentDay: PaymentDay = 5): Shift[] {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -111,9 +151,61 @@ export function filterShiftsByPeriod(shifts: Shift[], period: Period, paymentDay
         return shiftDate >= startOfYear && shiftDate <= endOfYear
       })
     }
+    case "thisWeek": {
+      const startOfWeek = getStartOfWeek(today)
+      const endOfWeek = getEndOfWeek(today)
+
+      return shifts.filter((shift) => {
+        const shiftDate = new Date(shift.date)
+        return shiftDate >= startOfWeek && shiftDate <= endOfWeek
+      })
+    }
+    case "lastWeek": {
+      const lastWeekToday = new Date(today)
+      lastWeekToday.setDate(today.getDate() - 7)
+      const startOfLastWeek = getStartOfWeek(lastWeekToday)
+      const endOfLastWeek = getEndOfWeek(lastWeekToday)
+
+      return shifts.filter((shift) => {
+        const shiftDate = new Date(shift.date)
+        return shiftDate >= startOfLastWeek && shiftDate <= endOfLastWeek
+      })
+    }
     case "all":
     default:
       return shifts
+  }
+}
+
+export function getPeriodDateRange(period: Period): { start: Date; end: Date } | null {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  switch (period) {
+    case "month": {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+      return { start: startOfMonth, end: endOfMonth }
+    }
+    case "year": {
+      const startOfYear = new Date(today.getFullYear(), 0, 1)
+      const endOfYear = new Date(today.getFullYear(), 11, 31)
+      return { start: startOfYear, end: endOfYear }
+    }
+    case "thisWeek": {
+      const startOfWeek = getStartOfWeek(today)
+      const endOfWeek = getEndOfWeek(today)
+      return { start: startOfWeek, end: endOfWeek }
+    }
+    case "lastWeek": {
+      const lastWeekToday = new Date(today)
+      lastWeekToday.setDate(today.getDate() - 7)
+      const startOfLastWeek = getStartOfWeek(lastWeekToday)
+      const endOfLastWeek = getEndOfWeek(lastWeekToday)
+      return { start: startOfLastWeek, end: endOfLastWeek }
+    }
+    default:
+      return null
   }
 }
 
@@ -138,7 +230,7 @@ export function calculateDailyEarnings(shifts: Shift[], date: string, hourlyRate
   return hourlyRate * totalHours - totalAdvances
 }
 
-export function calculateStats(shifts: Shift[], hourlyRate = 150): ShiftStats {
+export function calculateStats(shifts: Shift[], hourlyRate = 150, adjustment = 0): ShiftStats {
   // Filter shifts that are not advances for hours calculation
   const regularShifts = shifts.filter((shift) => !shift.isAdvance)
   const totalHours = regularShifts.reduce((sum, shift) => sum + shift.hours, 0)
@@ -151,8 +243,8 @@ export function calculateStats(shifts: Shift[], hourlyRate = 150): ShiftStats {
     return sum
   }, 0)
 
-  // Total wage = hourly rate * hours worked - advances
-  const totalWage = hourlyRate * totalHours - totalAdvance
+  // Total wage = hourly rate * hours worked - advances + adjustment
+  const totalWage = hourlyRate * totalHours - totalAdvance + adjustment
 
   return {
     totalHours,

@@ -37,8 +37,8 @@ export default function RootLayout({
       <head />
       <body className={`${outfit.className} ${outfit.variable} transition-colors duration-300`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <div className="flex flex-col min-h-screen max-w-md mx-auto">
-            <main className="flex-1 pb-16">{children}</main>
+          <div className="app-container">
+            <main className="main-content">{children}</main>
             <BottomNavigation />
           </div>
           <Toaster />
@@ -47,6 +47,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-
-import './globals.css'

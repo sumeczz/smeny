@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import Header from "@/components/header"
 import ShiftForm from "@/components/shift-form"
 import { getShifts } from "@/lib/shift-service"
 import type { Shift } from "@/lib/types"
@@ -28,17 +27,18 @@ export default function EditShiftPage() {
   }, [params.id, router])
 
   if (isLoading) {
-    return <div className="p-4">Načítání...</div>
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-pulse text-primary">Načítání...</div>
+        </div>
+      </div>
+    )
   }
 
   if (!shift) {
     return null
   }
 
-  return (
-    <div>
-      <Header title="Upravit směnu" />
-      <ShiftForm initialData={shift} isEditing />
-    </div>
-  )
+  return <ShiftForm initialData={shift} isEditing />
 }

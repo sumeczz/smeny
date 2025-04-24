@@ -92,3 +92,25 @@ export function getPaymentDay(): PaymentDay {
 export function setPaymentDay(day: PaymentDay): void {
   localStorage.setItem(PAYMENT_DAY_KEY, day.toString())
 }
+
+const WEEK_START_DAY_KEY = "weekStartDay"
+
+export type WeekStartDay = 0 | 1 | 2 | 3 | 4 | 5 | 6
+
+export function getWeekStartDay(): WeekStartDay {
+  if (typeof window === "undefined") return 1 // Monday as default
+
+  const day = localStorage.getItem(WEEK_START_DAY_KEY)
+  return day ? (Number(day) as WeekStartDay) : 1
+}
+
+export function setWeekStartDay(day: WeekStartDay): void {
+  localStorage.setItem(WEEK_START_DAY_KEY, day.toString())
+}
+
+export function getSoundEnabled(): boolean {
+  if (typeof window === "undefined") return true
+
+  const enabled = localStorage.getItem("soundEnabled")
+  return enabled === null ? true : enabled === "true"
+}

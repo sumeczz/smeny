@@ -3,21 +3,35 @@
 import { useState, useEffect } from "react"
 import ShiftItem from "@/components/shift-item"
 import EmptyState from "@/components/empty-state"
-import { getShifts } from "@/lib/shift-service"
+import { getShifts, getWeekStartDay } from "@/lib/shift-service"
 import type { Shift } from "@/lib/types"
 import { PlusCircle } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { playClickSound } from "@/lib/sound-service"
 import CurrentDateTime from "@/components/current-date-time"
+import { isNewWeek } from "@/lib/utils"
+import { autoBackup, isUserLoggedIn } from "@/lib/backup-service"
 
 export default function HomePage() {
   const [shifts, setShifts] = useState<Shift[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [weekStartDay, setWeekStartDay] = useState<number>(1)
 
   useEffect(() => {
     setShifts(getShifts())
+    setWeekStartDay(getWeekStartDay())
     setIsLoading(false)
+
+    // Kontrola automatického zálohování při načtení hlavní stránky
+    const checkAutoBackup = async () => {
+      const autoBackupEnabled = localStorage.getItem("autoBackupEnabled") === "true"
+      if (autoBackupEnabled && isUserLoggedIn()) {
+        await autoBackup()
+      }
+    }
+
+    checkAutoBackup()
   }, [])
 
   const handleDelete = () => {
@@ -36,17 +50,17 @@ export default function HomePage() {
   }
 
   return (
-    <div>
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border p-2 flex items-center justify-between transition-colors duration-300">
+    <div className="page-transition">
+      <div className="header">
         <CurrentDateTime />
-        <Link href="/add" className="ml-1" aria-label="Přidat směnu" onClick={() => playClickSound()}>
-          <Button size="icon" variant="ghost" className="h-8 w-8 transition-colors duration-200">
-            <PlusCircle className="h-5 w-5 text-primary" />
+        <Link href="/add" className="ml-auto" aria-label="Přidat směnu" onClick={() => playClickSound()}>
+          <Button size="icon" variant="ghost" className="icon-button text-primary">
+            <PlusCircle className="h-5 w-5" />
           </Button>
         </Link>
       </div>
 
-      <div className="p-2">
+      <div className="page-container">
         {shifts.length === 0 ? (
           <EmptyState
             title="Žádné směny"
@@ -55,10 +69,23 @@ export default function HomePage() {
             actionHref="/add"
           />
         ) : (
-          <div className="space-y-1.5">
-            {sortedShifts.map((shift, index) => (
-              <ShiftItem key={shift.id} shift={shift} onDelete={handleDelete} allShifts={shifts} index={index} />
-            ))}
+          <div className="space-y-1 animate-slide-up">
+            {sortedShifts.map((shift, index) => {
+              // Check if this shift starts a new week compared to the previous one
+              const previousShift = index < sortedShifts.length - 1 ? sortedShifts[index + 1] : null
+              const isNewWeekStart = previousShift ? isNewWeek(shift.date, previousShift.date, weekStartDay) : false
+
+              return (
+                <ShiftItem
+                  key={shift.id}
+                  shift={shift}
+                  onDelete={handleDelete}
+                  allShifts={shifts}
+                  index={index}
+                  isNewWeek={isNewWeekStart}
+                />
+              )
+            })}
           </div>
         )}
       </div>

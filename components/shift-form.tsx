@@ -78,8 +78,8 @@ export default function ShiftForm({ initialData, isEditing = false }: ShiftFormP
   ]
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4">
-      <div className="flex items-center mb-4">
+    <div className="page-transition">
+      <header className="header">
         <Button
           type="button"
           variant="ghost"
@@ -93,132 +93,141 @@ export default function ShiftForm({ initialData, isEditing = false }: ShiftFormP
           <ArrowLeft className="h-4 w-4 mr-1" />
           Zpět
         </Button>
-      </div>
+        <h1 className="h1">{isEditing ? "Upravit směnu" : "Přidat směnu"}</h1>
+      </header>
 
-      <div className="space-y-4">
-        <div className="stats-card p-4">
-          <div className="space-y-2">
-            <Label htmlFor="date" className="flex items-center text-sm">
-              <Calendar className="h-3.5 w-3.5 mr-1.5 text-primary" />
-              Datum
-            </Label>
-            <Input
-              id="date"
-              name="date"
-              type="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-              className="input-field touch-manipulation"
-            />
+      <form onSubmit={handleSubmit} className="page-container">
+        <div className="section">
+          <div className="stats-card">
+            <div className="form-group">
+              <Label htmlFor="date" className="form-label">
+                <Calendar className="h-4 w-4 mr-1.5 text-primary" />
+                Datum
+              </Label>
+              <Input
+                id="date"
+                name="date"
+                type="date"
+                value={formData.date}
+                onChange={handleChange}
+                required
+                className="input-field touch-manipulation h-10"
+              />
+            </div>
           </div>
         </div>
 
         {!formData.isAdvance && (
-          <div className="stats-card p-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startTime" className="flex items-center text-sm">
-                  <Clock className="h-3.5 w-3.5 mr-1.5 text-primary" />
-                  Čas od
-                </Label>
-                <Input
-                  id="startTime"
-                  name="startTime"
-                  type="time"
-                  value={formData.startTime}
-                  onChange={handleChange}
-                  required
-                  className="input-field touch-manipulation"
-                />
+          <div className="section">
+            <div className="stats-card">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="form-group">
+                  <Label htmlFor="startTime" className="form-label">
+                    <Clock className="h-4 w-4 mr-1.5 text-primary" />
+                    Čas od
+                  </Label>
+                  <Input
+                    id="startTime"
+                    name="startTime"
+                    type="time"
+                    value={formData.startTime}
+                    onChange={handleChange}
+                    required
+                    className="input-field touch-manipulation h-10"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <Label htmlFor="endTime" className="form-label">
+                    <Clock className="h-4 w-4 mr-1.5 text-primary" />
+                    Čas do
+                  </Label>
+                  <Input
+                    id="endTime"
+                    name="endTime"
+                    type="time"
+                    value={formData.endTime}
+                    onChange={handleChange}
+                    required
+                    className="input-field touch-manipulation h-10"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="endTime" className="flex items-center text-sm">
-                  <Clock className="h-3.5 w-3.5 mr-1.5 text-primary" />
-                  Čas do
+              <div className="form-group mt-3">
+                <Label className="form-label">
+                  <Clock className="h-4 w-4 mr-1.5 text-primary" />
+                  Odpracované hodiny
                 </Label>
-                <Input
-                  id="endTime"
-                  name="endTime"
-                  type="time"
-                  value={formData.endTime}
-                  onChange={handleChange}
-                  required
-                  className="input-field touch-manipulation"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2 mt-3">
-              <Label className="flex items-center text-sm">
-                <Clock className="h-3.5 w-3.5 mr-1.5 text-primary" />
-                Odpracované hodiny
-              </Label>
-              <div className="p-2 border rounded-md bg-primary/10 text-sm font-medium">
-                {Math.round(calculatedHours)} h
+                <div className="p-2 border rounded-lg bg-primary/10 text-sm font-medium text-primary">
+                  {Math.round(calculatedHours)} h
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        <div className="stats-card p-4">
-          <div className="space-y-2">
-            <Label htmlFor="advance" className="flex items-center text-sm">
-              <BanknoteIcon className="h-3.5 w-3.5 mr-1.5 text-primary" />
-              Záloha
-            </Label>
-            <Select value={formData.advance?.toString() || "0"} onValueChange={handleAdvanceChange}>
-              <SelectTrigger id="advance" className="input-field h-9">
-                <SelectValue placeholder="Vyberte zálohu" />
-              </SelectTrigger>
-              <SelectContent>
-                {advanceOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div className="section">
+          <div className="stats-card">
+            <div className="form-group">
+              <Label htmlFor="advance" className="form-label">
+                <BanknoteIcon className="h-4 w-4 mr-1.5 text-primary" />
+                Záloha
+              </Label>
+              <Select value={formData.advance?.toString() || "0"} onValueChange={handleAdvanceChange}>
+                <SelectTrigger id="advance" className="input-field h-10">
+                  <SelectValue placeholder="Vyberte zálohu" />
+                </SelectTrigger>
+                <SelectContent className="rounded-lg">
+                  {advanceOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div className="stats-card p-4">
-          <div className="space-y-2">
-            <Label htmlFor="notes" className="text-sm flex items-center">
-              <span className="i-lucide-file-text mr-1.5 text-primary"></span>
-              Poznámky (volitelné)
-            </Label>
-            <Textarea
-              id="notes"
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              rows={3}
-              className="resize-none text-sm input-field"
-            />
+        <div className="section">
+          <div className="stats-card">
+            <div className="form-group">
+              <Label htmlFor="notes" className="form-label">
+                <span className="i-lucide-file-text mr-1.5 text-primary"></span>
+                Poznámky (volitelné)
+              </Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                rows={3}
+                className="resize-none text-sm input-field"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex space-x-2 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          className="flex-1 transition-colors duration-200"
-          onClick={() => {
-            playClickSound()
-            router.push("/")
-          }}
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Zrušit
-        </Button>
-        <Button type="submit" className="flex-1 btn-primary transition-colors duration-200">
-          <Save className="h-4 w-4 mr-1" />
-          {isEditing ? "Uložit změny" : "Uložit záznam"}
-        </Button>
-      </div>
-    </form>
+        <div className="flex space-x-3 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1 transition-all duration-200 h-11 rounded-lg"
+            onClick={() => {
+              playClickSound()
+              router.push("/")
+            }}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Zrušit
+          </Button>
+          <Button type="submit" className="flex-1 btn-primary h-11">
+            <Save className="h-4 w-4 mr-1" />
+            {isEditing ? "Uložit změny" : "Uložit záznam"}
+          </Button>
+        </div>
+      </form>
+    </div>
   )
 }
